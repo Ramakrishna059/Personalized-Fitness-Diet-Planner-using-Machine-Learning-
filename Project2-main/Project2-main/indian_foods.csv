@@ -1,0 +1,30 @@
+Food Item,Category,Calories,Protein,Carbs,Fats,Type
+Poha,Breakfast,250,5,40,10,Veg
+Idli,Breakfast,150,4,35,2,Veg
+Paneer Paratha,Breakfast,300,12,45,15,Veg
+Egg Omelette,Breakfast,200,15,2,12,Non-Veg
+Vegetable Upma,Breakfast,280,6,50,5,Veg
+Aloo Paratha,Breakfast,350,8,60,20,Veg
+Chicken Sandwich,Breakfast,400,20,50,15,Non-Veg
+Dal Chawal,Lunch,450,18,60,10,Veg
+Rajma Chawal,Lunch,500,20,65,8,Veg
+Chole Bhature,Lunch,600,12,80,30,Veg
+Grilled Chicken,Lunch,550,45,10,25,Non-Veg
+Fish Curry,Lunch,500,40,5,30,Non-Veg
+Paneer Butter Masala,Lunch,480,25,20,35,Veg
+Samosa,Snack,150,3,15,5,Veg
+Masala Peanuts,Snack,200,8,10,12,Veg
+Greek Yogurt,Snack,100,15,8,2,Veg
+Fruit Salad,Snack,120,2,30,1,Veg
+Protein Shake,Snack,180,25,10,5,Non-Veg
+Roti Sabzi,Dinner,400,10,50,12,Veg
+Vegetable Pulao,Dinner,420,12,55,10,Veg
+Egg Curry,Dinner,450,22,20,15,Non-Veg
+Grilled Salmon,Dinner,500,50,5,20,Non-Veg
+Tofu Stir Fry,Dinner,350,20,35,8,Veg
+Dal Tadka,Dinner,380,15,45,12,Veg
+Mutton Biryani,Dinner,700,35,60,30,Non-Veg
+Vegetable Khichdi,Dinner,320,18,55,10,Veg
+Chicken Tikka,Dinner,600,40,10,15,Non-Veg
+Sprouts Chaat,Snack,220,10,30,5,Veg
+Cheese Toast,Snack,280,12,35,10,Veg

@@ -1,0 +1,167 @@
+import streamlit as st
+import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from pymongo import MongoClient
+import base64
+
+# Set page configuration
+st.set_page_config(page_title="Fitness Tracker", layout="wide")
+
+# Function to Encode Image as Base64
+def get_base64_image(image_path):
+    with open(image_path, "rb") as image_file:
+        encoded = base64.b64encode(image_file.read()).decode()
+    return encoded
+
+# Background Image Base64 Encoding with Overlay
+image_base64 = get_base64_image("C:bg2.jpg")
+page_bg_img = f'''
+<style>
+.stApp {{
+    background-image: url("data:image/jpg;base64,{image_base64}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: white;
+}}
+.stApp::before {{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);  /* Dark semi-transparent overlay */
+    z-index: 0;
+}}
+.main {{
+    z-index: 1;
+    position: relative;
+}}
+h1, h2, h3, h4, h5, h6, p, label {{
+    color: white;
+}}
+</style>
+'''
+st.markdown(page_bg_img, unsafe_allow_html=True)
+
+# MongoDB Connection
+MONGO_URI = "mongodb+srv://rupas01:Rupas9391@cluster0.ndaou.mongodb.net/"  # Replace with your MongoDB URI
+client = MongoClient(MONGO_URI)
+db = client["fitness_tracker"]  # Database name
+progress_collection = db["progress"]  # Collection for workout progress
+
+# Load Datasets
+indian_foods = pd.read_csv("indian_foods.csv")
+workout_data = pd.read_csv("workout_data.csv")
+
+# Streamlit UI
+st.title("Fitness Tracker")
+
+# Tabs
+tab1, tab2, tab3 = st.tabs(["Calorie Calculator & Recommendations", "Progress Tracking", "Progressive Overload"])
+
+# Tab 1: Calorie Calculator & Recommendations
+with tab1:
+    st.header("Calorie Calculator & Weekly Plan")
+    
+    # User Inputs
+    gender = st.selectbox("Select Your Gender", ["Male", "Female"])
+    age = st.number_input("Enter Your Age", min_value=10, max_value=100, step=1)
+    height = st.number_input("Enter Your Height (cm)", min_value=100, max_value=250, step=1)
+    weight = st.number_input("Enter Your Weight (kg)", min_value=30, max_value=200, step=1)
+    diet_preference = st.selectbox("Diet Preference", ["Vegetarian", "Non-Vegetarian"])
+    goal = st.selectbox("Select Your Goal", ["Weight Loss", "Muscle Gain", "Maintenance"])
+    
+    if st.button("Get Recommendations"):
+        # Calorie estimation using Mifflin-St Jeor Equation
+        if gender == "Male":
+            bmr = 10 * weight + 6.25 * height - 5 * age + 5
+        else:
+            bmr = 10 * weight + 6.25 * height - 5 * age - 161
+        
+        if goal == "Weight Loss":
+            calories = bmr * 0.8
+        elif goal == "Muscle Gain":
+            calories = bmr * 1.2
+        else:
+            calories = bmr
+        
+        st.write(f"Your estimated daily calorie intake should be around **{int(calories)} kcal**.")
+        
+        # Recommend Diet Plan
+        st.subheader("Recommended Diet Plan")
+        for category in ["Breakfast", "Lunch", "Snack", "Dinner"]:
+            filtered_foods = indian_foods[indian_foods["Category"] == category]
+            if diet_preference == "Vegetarian":
+                filtered_foods = filtered_foods[filtered_foods["Type"] == "Veg"]
+            else:
+                filtered_foods = filtered_foods[filtered_foods["Type"] == "Non-Veg"]
+            st.write(f"**{category}:**", filtered_foods.sample(1)["Food Item"].values[0])
+        
+        # Recommend Weekly Workout Plan
+        st.subheader("Recommended Weekly Workout Plan")
+        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        for day in days:
+            st.write(f"**{day}:**")
+            st.table(workout_data.sample(3)[["Exercise Name", "Beginner Sets", "Beginner Reps", "Beginner Weight (kg)"]])
+
+# Tab 2: Progress Tracking
+with tab2:
+    st.header("Progress Tracking")
+    st.write("Enter your workout details below:")
+    exercise = st.selectbox("Select Exercise", workout_data["Exercise Name"].unique())
+    weight_used = st.number_input("Weight Used (kg)", min_value=0, max_value=200, step=1)
+    sets = st.number_input("Number of Sets", min_value=1, max_value=10, step=1)
+    reps = st.number_input("Number of Reps", min_value=1, max_value=20, step=1)
+    day_name = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+    
+    if st.button("Save Progress"):
+        progress_data = {
+            "Day": day_name,
+            "Exercise": exercise,
+            "Weight": weight_used,
+            "Sets": sets,
+            "Reps": reps
+        }
+        progress_collection.insert_one(progress_data)
+        st.success("Progress saved to MongoDB!")
+    
+    if st.button("View Progress"):
+        records = list(progress_collection.find({}, {"_id": 0}))  # Exclude MongoDB's default `_id`
+        if records:
+            progress_df = pd.DataFrame(records)
+            st.table(progress_df)
+        else:
+            st.warning("No progress recorded yet.")
+
+# Tab 3: Progressive Overload Analysis
+with tab3:
+    st.header("Progressive Overloading")
+    st.write("Analyzing your 1st-week progress to suggest overload weights for the next 4 weeks...")
+    
+    # Fetch progress from MongoDB
+    records = list(progress_collection.find({}, {"_id": 0}))
+    if records:
+        progress = pd.DataFrame(records)
+        
+        if len(progress["Exercise"].unique()) >= 3:
+            first_week = progress.groupby("Exercise")["Weight"].mean().reset_index()
+            scaler = StandardScaler()
+            weights_scaled = scaler.fit_transform(first_week[["Weight"]])
+            
+            n_clusters = min(3, len(first_week))
+            kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init="auto")
+            first_week["Cluster"] = kmeans.fit_predict(weights_scaled)
+            
+            first_week["Next Week"] = first_week["Weight"] * 1.05
+            first_week["Week 3"] = first_week["Weight"] * 1.10
+            first_week["Week 4"] = first_week["Weight"] * 1.15
+            first_week["Week 5"] = first_week["Weight"] * 1.20
+            
+            st.table(first_week)
+        else:
+            st.warning("Not enough data for clustering.")
+    else:
+        st.warning("No progress data available.")
