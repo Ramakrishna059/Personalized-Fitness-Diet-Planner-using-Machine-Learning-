@@ -21,34 +21,7 @@ Libraries:
 3.numpy: For numerical operations.
 4.Database
 5.API(if applicable):[Mention if you're using any external APIs, e.g., a food nutrition database API, exercise database API]
-6.Node.js (if using a JavaScript frontend framework like React)
-
-Backend Setup
-1.Clone the Repository:
-Bash
-git clone https://github.com/your-username/Personalized-Fitness-Diet-Planner-using-Machine-Learning.git
-cd Personalized-Fitness-Diet-Planner-using-Machine-Learning/backend
-
-2.Create a Virtual Environment:
-Bash
-python -m venv venv
-source venv/bin/activate  # On Windows: `venv\Scripts\activate`
-
-3.Install Dependencies:
-Bash
-pip install -r requirements.txt
-
-4.Set Up Environment Variables:
-Create a .env file in the backend/ directory based on .env.example.
-# .env
-DATABASE_URL=your_database_connection_string
-API_KEY=your_optional_external_api_key
-# Add any other sensitive variables here
-
-5.Run Migrations (if using a relational database with ORM):
-Bash
-# Example for Flask-SQLAlchemy with Flask-Migrate
-flask db upgrade
+6.Node.js (if using a JavaScript frontend framework like React).
 
 License:This project is licensed under the MIT License.
 
